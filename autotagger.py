@@ -13,6 +13,8 @@ import requests
 import unicodedata
 from mutagen.easyid3 import EasyID3
 from mutagen.easymp4 import EasyMP4
+from mutagen.id3 import ID3
+import mutagen.id3._util
 
 
 extra_id3_tags = [
@@ -27,9 +29,22 @@ for k, v in extra_id3_tags:
 logger = logging.getLogger()
 
 
+def load_mp3(filename):
+    try:
+        return EasyID3(filename)
+    except mutagen.id3._util.ID3NoHeaderError:
+        id3 = ID3()
+        id3.save(filename)
+        return EasyID3(filename)
+
+
+def load_m4a(filename):
+    return EasyMP4(filename)
+
+
 SUPPORT_EXTS = {
-    'mp3': EasyID3,
-    'm4a': EasyMP4,
+    'mp3': load_mp3,
+    'm4a': load_m4a,
 }
 
 
@@ -72,10 +87,13 @@ class Song(object):
     }
 
     def __init__(self, filepath):
+        self.filepath = filepath
         filename = to_unicode(os.path.basename(filepath))
+        self.filename = filename
         ext = get_and_check_ext(filename)
-        self.mutagen_cls = SUPPORT_EXTS[ext]
-        self.mutagen_obj = self.mutagen_cls(filepath)
+        self.ext = ext
+        self.mutagen_factory = SUPPORT_EXTS[ext]
+        self.mutagen_obj = self.mutagen_factory(filepath)
         self.key_map = Song.MUTAGEN_KEY_MAPS[ext]
         self.reversed_key_map = {v: k for k, v in self.key_map.iteritems()}
 
@@ -91,7 +109,6 @@ class Song(object):
             disc_number = ''
 
         self.id = generate_id(track_number, disc_number)
-        self.filename = filename
 
     def get(self, key):
         mutagen_key = self.key_map[key]
@@ -102,18 +119,17 @@ class Song(object):
 
     def update_tags(self, tags, clear_others=False):
         logger.info(u'Tag song: %s', self.filename)
+
+        if clear_others:
+            # Delete old
+            self.mutagen_obj.delete()
+            # Create new
+            self.mutagen_obj = self.mutagen_factory(self.filepath)
+
         for k, v in tags.iteritems():
             mutagen_key = self.key_map[k]
             self.mutagen_obj[mutagen_key] = str(v)
 
-        # Clear if indicated
-        if clear_others:
-            for _k in self.mutagen_obj:
-                #logger.debug('Clear others, %s, %s', _k, self.reversed_key_map)
-                if _k not in self.reversed_key_map:
-                    # Remove this key
-                    logger.debug('remove key: %s', _k)
-                    self.mutagen_obj[_k] = ''
         self.mutagen_obj.save()
 
     def __repr__(self):
