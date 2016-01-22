@@ -19,11 +19,6 @@ to make things simpler, I chose 8 essential and common fields pragmatically:
 By default, autotagger will only work with these 8 fields, anything not included will be
 ignored.
 
-To make autotagger working properly, you should first find the iTunes url
-for your album, autotagger take advantage of iTunes's awesome lookup API
-and grab tagging data from it. For further usage and help information,
-read the instructions below.
-
 Install
 -------
 
@@ -35,54 +30,64 @@ Install
 Usage
 -----
 
-`autotagger --help` to see detailed information about command line options.
+Run ``autotagger --help`` to see detailed information about command line options.
 
 Input/Paste songs manually
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-::
-
-    autotagger -i 251480659
-
-You can copy file paths by right click on songs in finder and choose ``Copy Path``
-
-.. image:: images/r-origin-copy-path.png
+To make autotagger working properly, you should first find the iTunes url
+for your album, autotagger take advantage of iTunes's awesome lookup API
+and grab tagging data from it. use ``-u`` to indicate the itunes album url:
 
 ::
 
     autotagger -u https://itunes.apple.com/us/album/schole-compilation-vol.-1/id251480659
 
-You can use url instead of album id either
+After running this command, autotagger will ask you to enter the file paths,
+you can copy them by right click on songs in finder and choose ``Copy Path``
+
+.. image:: images/r-origin-copy-path.png
+
+Then paste them in the terminal, and hit enter to continue.
+
+You can use url instead of album id to make the command clearer:
+
+::
+
+    autotagger -i 251480659
 
 
 Pass songs from pipeline
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+If you can get the song names from other command's output, you can use
+pipeline mode to feed the input, add ``-p`` option to enable this feature:
+
 ::
 
     find album -type f -name '*.mp3' | autotagger -i 251480659 -p
-
-Add ``-p`` option to enable this feature.
 
 
 Clear other tags
 ~~~~~~~~~~~~~~~~
 
+If you want the songs to be tagged just the 8 fields other than anything else,
+you can add ``-c`` to achieve that. By adding this option, only the 8 fields
+will be contained in the songs, any other fields will be removed.
+
 ::
 
     autotagger -i 251480659 -c
-
-Add ``-c`` to clear other tags.
 
 
 Download artwork
 ~~~~~~~~~~~~~~~~
 
+Add ``-a`` option to download artwork, note this option will make the command stop tagging songs.
+
 ::
 
     autotagger -i 251480659 -a
-
-Add ``-a`` option to download artwork, note this option will make the command stop tagging songs
 
 
 Screenshots
