@@ -19,7 +19,7 @@ to make things simpler, I chose 8 essential and common fields pragmatically:
 By default, autotagger will only work with these 8 fields, anything not included will be
 ignored.
 
-Currently tested under Mac OS X with Python 2.7.10, if you find anything wrong
+autotagger is currently tested under Mac OS X with Python 2.7.10, if you find anything wrong
 with this program, feel free to submit an issue.
 
 Install
@@ -33,14 +33,24 @@ Install
 Usage
 -----
 
+autotagger combines audio files with iTunes data,
+it use track number (and disc number, if exists) to identify a song and
+match it with iTunes data. In short, the progress could be summarized in three steps:
+
+- Find the url of your album on iTunes, for [example](https://itunes.apple.com/us/album/note-seconds-schole-compilation/id376201016)
+- Make sure every song you want to tag has track number (and disc number,
+  if its a multi-CD album) set properly. You can use a ID3 tagging tool like
+  [meta](https://itunes.apple.com/us/app/meta-music-tag-editor-audio/id558317092?mt=12)
+  in OS X or [mp3tag](http://www.mp3tag.de/en/) in Windows to achieve that.
+- Run ``autotagger`` command with data above.
+
+
 Run ``autotagger --help`` to see detailed information about command line options.
 
 Input/Paste songs manually
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To make autotagger working properly, you should first find the iTunes url
-for your album, autotagger take advantage of iTunes's awesome lookup API
-and grab tagging data from it. use ``-u`` to indicate the itunes album url:
+Use ``-u`` to indicate the iTunes album url:
 
 ::
 
@@ -53,7 +63,7 @@ you can copy them by right click on songs in finder and choose ``Copy Path``
 
 Then paste them in the terminal, and hit enter to continue.
 
-You can use url instead of album id to make the command clearer:
+You can also album id instead of url to make it clearer:
 
 ::
 
@@ -75,8 +85,8 @@ Clear other tags
 ~~~~~~~~~~~~~~~~
 
 If you want the songs to be tagged just the 8 fields other than anything else,
-you can add ``-c`` to achieve that. By adding this option, only the 8 fields
-will be contained in the songs, any other fields will be removed.
+add ``-c`` to enable that. By adding this option, only the 8 fields
+will be contained in the processed songs, any other fields will be removed.
 
 ::
 
