@@ -305,7 +305,7 @@ def _cell(s, limit=35):
     s = to_unicode(s)
     width = unicode_width(s)
     if width > limit:
-        align_pos = - limit + 2
+        align_pos = - limit + 4
         s = s[align_pos:]
         return u'…' + u' ' * (limit - unicode_width(s)) + s
     else:
