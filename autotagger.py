@@ -130,7 +130,7 @@ class Song(object):
 
         for k, v in tags.iteritems():
             mutagen_key = self.key_map[k]
-            self.mutagen_obj[mutagen_key] = str(v)
+            self.mutagen_obj[mutagen_key] = to_unicode(v)
 
         self.mutagen_obj.save()
 
@@ -166,7 +166,15 @@ def generate_id(track_number, disc_number):
 def to_unicode(s):
     if isinstance(s, str):
         return s.decode('utf8')
-    return s
+    else:
+        return unicode(s)
+
+
+def to_str(s):
+    if isinstance(s, unicode):
+        return s.encode('utf8')
+    else:
+        return str(s)
 
 
 ITUNES_API_ALBUM_URL = 'https://itunes.apple.com/lookup?id={}&entity=song'
@@ -174,6 +182,7 @@ ITUNES_API_ALBUM_URL = 'https://itunes.apple.com/lookup?id={}&entity=song'
 
 def fetch_album_songs(album_id, only_songs=True):
     url = ITUNES_API_ALBUM_URL.format(album_id)
+    logger.info('Fetching itunes data: %s', url)
     resp = requests.get(url)
     data = resp.json()
     results = data['results']
@@ -269,12 +278,13 @@ def tag_songs(songs, album_id, clear_others=False, need_confirm=True):
         ) for i, is_good, j, k in preview_tuples)
 
     # Show preview and stats
-    print('Preview:')
+    print('\nPreview:')
     good_count = len(filter(lambda x: x[1], preview_tuples))
     stat_str = '{} input, {} could be processed, {} unmatched, {}'.format(
         len(songs_col), good_count, unmatched_count,
         'better to recheck :/' if unmatched_count else 'looks good :)')
     print(preview)
+    print()
     print(stat_str)
 
     if need_confirm:
@@ -349,7 +359,7 @@ ID_REGEX = re.compile(r'id(\d+)\/?$')
 def get_id_from_url(url):
     rv = ID_REGEX.search(url)
     if rv:
-        return rv.group()
+        return rv.groups()[0]
     return None
 
 
@@ -443,6 +453,7 @@ def main():
             else:
                 c = raw_input('Stop adding songs and start tagging? (enter or y to confirm, N to continue adding.) ')
                 if c == '' or c == 'y':
+                    print()
                     break
 
     songs = filter(None, songs)
