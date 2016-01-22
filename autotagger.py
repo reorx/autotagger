@@ -34,6 +34,7 @@ def load_mp3(filename):
     try:
         return EasyID3(filename)
     except mutagen.id3._util.ID3NoHeaderError:
+        # Fix mp3 file no tag loading error, m4a has no this problem
         id3 = ID3()
         id3.save(filename)
         return EasyID3(filename)
@@ -98,7 +99,7 @@ class Song(object):
         self.key_map = Song.MUTAGEN_KEY_MAPS[ext]
         self.reversed_key_map = {v: k for k, v in self.key_map.iteritems()}
 
-        logger.debug('mutagen obj: %s', self.mutagen_obj)
+        #logger.debug('mutagen obj: %s', self.mutagen_obj)
 
         track_number = self.get('track_number')
         disc_number = self.get('disc_number')
@@ -231,18 +232,50 @@ def tag_songs(songs, album_id, clear_others=False, need_confirm=True):
         songs_data_col[_id] = song_data
 
     logger.debug('formatted song data [0]: %s', songs_data_col.values()[0])
-    # Show preview
-    args_tuples = []
-    for id, song in songs_col.iteritems():
-        args_tuples.append((song, songs_data_col.get(id)))
 
+    # Prepare arguments
+    args_tuples = []
+    preview_tuples = []
+    unmatched_count = 0
+    songs_data_col_stack = dict(songs_data_col)
+    for id, song in songs_col.iteritems():
+        song_data = songs_data_col_stack.pop(id, None)
+        if song_data is None:
+            # Unmatched song data
+            preview_tuples.append(
+                (song.filename, False, '<no data>', '?')
+            )
+            unmatched_count += 1
+        else:
+            args_tuples.append(
+                (song, song_data)
+            )
+            preview_tuples.append(
+                (song.filename, True, _get_title(song_data), _get_track_number(song_data))
+            )
+
+    # Unmatched song file
+    preview_tuples.extend([
+        ('<no song>', False, _get_title(i), _get_track_number(i))
+        for i in songs_data_col_stack.itervalues()
+    ])
+    unmatched_count += len(songs_data_col_stack)
     preview = u'\n'.join(
-        u'{}  →  {}'.format(
-            _cell(i.filename),
-            _cell(_get_title(j))
-        ) for i, j in args_tuples)
+        u'{}  {}  {}  {}'.format(
+            _cell(i),
+            u'→' if is_good else u'✗',
+            _cell(j),
+            k,
+        ) for i, is_good, j, k in preview_tuples)
+
+    # Show preview and stats
     print('Preview:')
+    good_count = len(filter(lambda x: x[1], preview_tuples))
+    stat_str = '{} input, {} could be processed, {} unmatched, {}'.format(
+        len(songs_col), good_count, unmatched_count,
+        'better to recheck :/' if unmatched_count else 'looks good :)')
     print(preview)
+    print(stat_str)
 
     if need_confirm:
         # Fix stdin being redirected when using pipeline:
@@ -291,6 +324,13 @@ def _get_title(o):
         return u''
     else:
         return o.get('title')
+
+
+def _get_track_number(o):
+    if o is None:
+        return u'?'
+    else:
+        return o.get('track_number')
 
 
 def get_and_check_ext(filename):
