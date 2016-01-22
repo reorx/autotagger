@@ -22,8 +22,8 @@ ignored.
 autotagger is currently tested under Mac OS X with Python 2.7.10, if you find anything wrong
 with this program, feel free to submit an issue.
 
-Install
--------
+Installation
+------------
 
 ::
 
@@ -34,18 +34,19 @@ Usage
 -----
 
 autotagger combines audio files with iTunes data,
-it use track number (and disc number, if exists) to identify a song and
+it uses track number (and disc number, if exists) to identify a song and
 match it with iTunes data. In short, the progress could be summarized in three steps:
 
-- Find the url of your album on iTunes, for [example](https://itunes.apple.com/us/album/note-seconds-schole-compilation/id376201016)
+- Find the url of your album on iTunes, for `example
+  <https://itunes.apple.com/us/album/note-seconds-schole-compilation/id376201016>`_.
 - Make sure every song you want to tag has track number (and disc number,
   if its a multi-CD album) set properly. You can use a ID3 tagging tool like
-  [meta](https://itunes.apple.com/us/app/meta-music-tag-editor-audio/id558317092?mt=12)
-  in OS X or [mp3tag](http://www.mp3tag.de/en/) in Windows to achieve that.
+  `meta <https://itunes.apple.com/us/app/meta-music-tag-editor-audio/id558317092?mt=12>`_
+  on OS X or `mp3tag <http://www.mp3tag.de/en/>`_ on Windows to achieve that.
 - Run ``autotagger`` command with data above.
 
 
-Run ``autotagger --help`` to see detailed information about command line options.
+``autotagger --help`` to see detailed information about command line options.
 
 Input/Paste songs manually
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
