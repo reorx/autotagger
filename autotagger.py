@@ -6,6 +6,7 @@ from __future__ import print_function
 import re
 import os
 import sys
+import shutil
 import logging
 import datetime
 import argparse
@@ -170,11 +171,15 @@ def to_unicode(s):
 ITUNES_API_ALBUM_URL = 'https://itunes.apple.com/lookup?id={}&entity=song'
 
 
-def fetch_album_songs(album_id):
+def fetch_album_songs(album_id, only_songs=True):
     url = ITUNES_API_ALBUM_URL.format(album_id)
     resp = requests.get(url)
     data = resp.json()
-    return data['results'][1:]
+    results = data['results']
+    if only_songs:
+        return results[1:]
+    else:
+        return results
 
 
 # general key -> itunes api key
@@ -308,6 +313,24 @@ def get_id_from_url(url):
     return None
 
 
+def download_artwork(album_id, artwork_size):
+    data = fetch_album_songs(album_id, only_songs=False)
+    album_data = data[0]
+    size_repr = artwork_size + 'x' + artwork_size
+    artwork_url = album_data['artworkUrl100'].replace('100x100', size_repr)
+    logger.info('Download from url: %s', artwork_url)
+
+    filename = 'artwork-{}.jpg'.format(size_repr)
+
+    resp = requests.get(artwork_url, stream=True)
+    if resp.status_code < 300:
+        with open(filename, 'wb') as f:
+            shutil.copyfileobj(resp.raw, f)
+    else:
+        print('Download failed with status %s, %s', resp.status_code, resp.content)
+        sys.exit(1)
+
+
 def main():
     usage_example = """Examples:
   By ID:
@@ -336,6 +359,12 @@ def main():
     parser.add_argument('-c', '--clear-others', action='store_true',
                         help='Clear other tags')
 
+    parser.add_argument('-a', '--download-artwork', action='store_true',
+                        help='Download artwork, do this only')
+
+    parser.add_argument('--artwork-size', type=str, default='500',
+                        help='Specify artwork size, default is 500, use with `-a` option')
+
     args = parser.parse_args()
 
     # Configure logging
@@ -356,6 +385,10 @@ def main():
 
     if not album_id:
         raise ValueError('Could not get album id from arguments')
+
+    if args.download_artwork:
+        download_artwork(album_id, args.artwork_size)
+        return
 
     if args.pipeline:
         user_input = sys.stdin.read()
