@@ -26,7 +26,7 @@ Input/Paste songs manually
 
 You can copy file paths by right click on songs in finder and choose ``Copy Path``
 
-.. image:: images/copy-path.png
+.. image:: images/r-origin-copy-path.png
 
 ::
 
@@ -70,8 +70,8 @@ Screenshots
 
 ``autotagger -i 251480659``
 
-.. image:: images/simple.png
+.. image:: images/r-origin-simple.png
 
 ``find album -type f -name '*.mp3' | autotagger -i 251480659 -p``
 
-.. image:: images/pipeline.png
+.. image:: images/r-origin-pipeline.png
