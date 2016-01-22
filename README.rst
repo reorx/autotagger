@@ -3,6 +3,26 @@ Autotagger
 
 Tag `.mp3` and `.m4a` audio files from iTunes data automatically.
 
+There are various standards in audio file tagging, and the fields they contain
+are huge mess, but since most of them are not being used by us normal people,
+to make things simpler, I chose 8 essential and common fields pragmatically:
+
+- Title
+- Album
+- Artist
+- Album Artist
+- Genre
+- Release Date
+- Track Number
+- Disc Number
+
+By default, autotagger will only work with these 8 fields, anything not included will be
+ignored.
+
+To make autotagger working properly, you should first find the iTunes url
+for your album, autotagger take advantage of iTunes's awesome lookup API
+and grab tagging data from it. For further usage and help information,
+read the instructions below.
 
 Install
 -------
