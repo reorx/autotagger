@@ -63,6 +63,19 @@ GENERAL_KEYS = [
 ]
 
 
+# general key -> itunes api key
+ITUNES_API_KEY_MAP = {
+    'title': 'trackName',
+    'album': 'collectionName',
+    'artist': 'artistName',
+    'album_artist': 'collectionArtistName',  # may not exists
+    'genre': 'primaryGenreName',
+    'release_date': 'releaseDate',
+    'track_number': 'trackNumber',
+    'disc_number': 'discNumber',
+}
+
+
 class Song(object):
     # Based on exports from iTunes: general key -> mutagen id3 key
     MUTAGEN_KEY_MAPS = {
@@ -130,7 +143,10 @@ class Song(object):
 
         for k, v in tags.iteritems():
             mutagen_key = self.key_map[k]
-            self.mutagen_obj[mutagen_key] = to_unicode(v)
+            if v is None and mutagen_key in self.mutagen_obj:
+                del self.mutagen_obj[mutagen_key]
+            else:
+                self.mutagen_obj[mutagen_key] = to_unicode(v)
 
         self.mutagen_obj.save()
 
@@ -190,19 +206,6 @@ def fetch_album_songs(album_id, only_songs=True):
         return results[1:]
     else:
         return results
-
-
-# general key -> itunes api key
-ITUNES_API_KEY_MAP = {
-    'title': 'trackName',
-    'album': 'collectionName',
-    'artist': 'artistName',
-    'album_artist': 'collectionArtistName',
-    'genre': 'primaryGenreName',
-    'release_date': 'releaseDate',
-    'track_number': 'trackNumber',
-    'disc_number': 'discNumber',
-}
 
 
 def format_song_data(origin):
@@ -363,6 +366,9 @@ def get_id_from_url(url):
     return None
 
 
+ALBUM_NAME_KEY = 'collectionName'
+
+
 def download_artwork(album_id, artwork_size):
     data = fetch_album_songs(album_id, only_songs=False)
     album_data = data[0]
@@ -370,11 +376,16 @@ def download_artwork(album_id, artwork_size):
     artwork_url = album_data['artworkUrl100'].replace('100x100', size_repr)
     logger.info('Download from url: %s', artwork_url)
 
-    filename = 'artwork-{}.jpg'.format(size_repr)
+    # get album name
+    album_name = album_data[ALBUM_NAME_KEY]
+    album_name = album_name.strip().replace(' ', '')
+
+    filename = '{}-{}.jpg'.format(album_name, size_repr)
 
     resp = requests.get(artwork_url, stream=True)
     if resp.status_code < 300:
         with open(filename, 'wb') as f:
+            logging.info('Write to file: %s', filename)
             shutil.copyfileobj(resp.raw, f)
     else:
         print('Download failed with status %s, %s', resp.status_code, resp.content)
