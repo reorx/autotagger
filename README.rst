@@ -22,6 +22,10 @@ ignored.
 autotagger is currently tested under Mac OS X with Python 2.7.10, if you find anything wrong
 with this program, feel free to submit an issue.
 
+TODO:
+
+- [ ] append album artwork in tracks
+
 Installation
 ------------
 
