@@ -193,7 +193,7 @@ def to_str(s):
         return str(s)
 
 
-ITUNES_API_ALBUM_URL = 'https://itunes.apple.com/lookup?id={}&entity=song'
+ITUNES_API_ALBUM_URL = 'https://itunes.apple.com/lookup?id={}&entity=song&limit=200'
 
 
 def fetch_album_songs(album_id, only_songs=True):
