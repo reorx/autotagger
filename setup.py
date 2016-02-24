@@ -5,7 +5,7 @@ from setuptools import setup
 
 
 # Use semantic versioning: MAJOR.MINOR.PATCH
-version = '0.1.4'
+version = '0.1.5'
 
 
 def get_requires():
