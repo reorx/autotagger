@@ -76,6 +76,14 @@ ITUNES_API_KEY_MAP = {
 }
 
 
+AVAILABLE_LANGUAGES = ['en_us', 'ja_jp']
+DEFAULT_LANGUAGE = 'en_us'
+LANGUAGE_COUNTRY_MAP = {
+    'en_us': 'US',
+    'ja_jp': 'JP',
+}
+
+
 class Song(object):
     # Based on exports from iTunes: general key -> mutagen id3 key
     MUTAGEN_KEY_MAPS = {
@@ -193,11 +201,11 @@ def to_str(s):
         return str(s)
 
 
-ITUNES_API_ALBUM_URL = 'https://itunes.apple.com/lookup?id={}&entity=song&limit=200'
+ITUNES_API_ALBUM_URL = 'https://itunes.apple.com/lookup?id={}&entity=song&limit=200&lang={}&country={}'
 
 
-def fetch_album_songs(album_id, only_songs=True):
-    url = ITUNES_API_ALBUM_URL.format(album_id)
+def fetch_album_songs(album_id, only_songs=True, language=DEFAULT_LANGUAGE):
+    url = ITUNES_API_ALBUM_URL.format(album_id, language, LANGUAGE_COUNTRY_MAP[language])
     logger.info('Fetching itunes data: %s', url)
     resp = requests.get(url)
     data = resp.json()
@@ -222,7 +230,7 @@ def format_song_data(origin):
     return d
 
 
-def tag_songs(songs, album_id, clear_others=False, need_confirm=True):
+def tag_songs(songs, album_id, clear_others=False, need_confirm=True, language=DEFAULT_LANGUAGE):
     songs_col = {}
 
     for filename in songs:
@@ -236,7 +244,7 @@ def tag_songs(songs, album_id, clear_others=False, need_confirm=True):
 
     # Prepare data
     songs_data_col = {}
-    songs_data = fetch_album_songs(album_id)
+    songs_data = fetch_album_songs(album_id, language=language)
     logger.debug('origin song data [0]: %s', songs_data[0])
     for _song_data in songs_data:
         song_data = format_song_data(_song_data)
@@ -426,6 +434,9 @@ def main():
     parser.add_argument('--artwork-size', type=str, default='500',
                         help='Specify artwork size, default is 500, use with `-a` option')
 
+    parser.add_argument('-l', '--language', type=str, metavar='LANGUAGE', default=DEFAULT_LANGUAGE,
+                        help='The language you want to use for song name, available values: en_us, ja_jp')
+
     args = parser.parse_args()
 
     # Configure logging
@@ -440,6 +451,7 @@ def main():
 
     logger.debug('args: %s', args)
 
+    # Check args
     album_id = args.album_id
     if not album_id:
         album_id = get_id_from_url(args.url)
@@ -450,6 +462,10 @@ def main():
     if args.download_artwork:
         download_artwork(album_id, args.artwork_size)
         return
+
+    if args.language:
+        if args.language not in AVAILABLE_LANGUAGES:
+            raise ValueError('language could only be one of %s' % AVAILABLE_LANGUAGES)
 
     if args.pipeline:
         user_input = sys.stdin.read()
@@ -470,7 +486,7 @@ def main():
     songs = filter(None, songs)
     logger.debug('input songs:%s', songs)
 
-    tag_songs(songs, album_id, clear_others=args.clear_others)
+    tag_songs(songs, album_id, clear_others=args.clear_others, language=args.language)
 
 
 if __name__ == '__main__':
