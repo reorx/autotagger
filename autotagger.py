@@ -142,6 +142,7 @@ class Song(object):
 
     def update_tags(self, tags, clear_others=False):
         logger.info(u'Tag song: %s', self.filename)
+        logger.debug('with tags: %s' % tags)
 
         if clear_others:
             # Delete old
@@ -151,8 +152,12 @@ class Song(object):
 
         for k, v in tags.iteritems():
             mutagen_key = self.key_map[k]
-            if v is None and mutagen_key in self.mutagen_obj:
-                del self.mutagen_obj[mutagen_key]
+            if v is None:
+                if mutagen_key in self.mutagen_obj:
+                    del self.mutagen_obj[mutagen_key]
+                else:
+                    # Leave this key unchanged
+                    pass
             else:
                 self.mutagen_obj[mutagen_key] = to_unicode(v)
 
