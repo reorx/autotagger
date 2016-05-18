@@ -209,12 +209,18 @@ def to_str(s):
 ITUNES_API_ALBUM_URL = 'https://itunes.apple.com/lookup?id={}&entity=song&limit=200&lang={}&country={}'
 
 
+class ResultIsEmpty(Exception):
+    pass
+
+
 def fetch_album_songs(album_id, only_songs=True, language=DEFAULT_LANGUAGE):
     url = ITUNES_API_ALBUM_URL.format(album_id, language, LANGUAGE_COUNTRY_MAP[language])
     logger.info('Fetching itunes data: %s', url)
     resp = requests.get(url)
     data = resp.json()
     results = data['results']
+    if not len(results):
+        raise ResultIsEmpty('Response is: {}'.format(resp.content.strip()))
     if only_songs:
         return results[1:]
     else:
@@ -382,8 +388,8 @@ def get_id_from_url(url):
 ALBUM_NAME_KEY = 'collectionName'
 
 
-def download_artwork(album_id, artwork_size):
-    data = fetch_album_songs(album_id, only_songs=False)
+def download_artwork(album_id, artwork_size, language=DEFAULT_LANGUAGE):
+    data = fetch_album_songs(album_id, only_songs=False, language=language)
     album_data = data[0]
     size_repr = artwork_size + 'x' + artwork_size
     artwork_url = album_data['artworkUrl100'].replace('100x100', size_repr)
@@ -464,13 +470,13 @@ def main():
     if not album_id:
         raise ValueError('Could not get album id from arguments')
 
-    if args.download_artwork:
-        download_artwork(album_id, args.artwork_size)
-        return
-
     if args.language:
         if args.language not in AVAILABLE_LANGUAGES:
             raise ValueError('language could only be one of %s' % AVAILABLE_LANGUAGES)
+
+    if args.download_artwork:
+        download_artwork(album_id, args.artwork_size, language=args.language)
+        return
 
     if args.pipeline:
         user_input = sys.stdin.read()
