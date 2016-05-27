@@ -78,9 +78,11 @@ ITUNES_API_KEY_MAP = {
 
 AVAILABLE_LANGUAGES = ['en_us', 'ja_jp']
 DEFAULT_LANGUAGE = 'en_us'
-LANGUAGE_COUNTRY_MAP = {
-    'en_us': 'US',
-    'ja_jp': 'JP',
+DEFAULT_COUNTRY = 'US'
+
+GLOBAL_CONTEXT = {
+    'language': DEFAULT_LANGUAGE,
+    'country': DEFAULT_COUNTRY,
 }
 
 
@@ -213,8 +215,8 @@ class ResultIsEmpty(Exception):
     pass
 
 
-def fetch_album_songs(album_id, only_songs=True, language=DEFAULT_LANGUAGE):
-    url = ITUNES_API_ALBUM_URL.format(album_id, language, LANGUAGE_COUNTRY_MAP[language])
+def fetch_album_songs(album_id, only_songs=True, context=GLOBAL_CONTEXT):
+    url = ITUNES_API_ALBUM_URL.format(album_id, context['language'], context['country'])
     logger.info('Fetching itunes data: %s', url)
     resp = requests.get(url)
     data = resp.json()
@@ -241,7 +243,7 @@ def format_song_data(origin):
     return d
 
 
-def tag_songs(songs, album_id, clear_others=False, need_confirm=True, language=DEFAULT_LANGUAGE):
+def tag_songs(songs, album_id, clear_others=False, need_confirm=True):
     songs_col = {}
 
     for filename in songs:
@@ -255,7 +257,7 @@ def tag_songs(songs, album_id, clear_others=False, need_confirm=True, language=D
 
     # Prepare data
     songs_data_col = {}
-    songs_data = fetch_album_songs(album_id, language=language)
+    songs_data = fetch_album_songs(album_id)
     logger.debug('origin song data [0]: %s', songs_data[0])
     for _song_data in songs_data:
         song_data = format_song_data(_song_data)
@@ -388,8 +390,8 @@ def get_id_from_url(url):
 ALBUM_NAME_KEY = 'collectionName'
 
 
-def download_artwork(album_id, artwork_size, language=DEFAULT_LANGUAGE):
-    data = fetch_album_songs(album_id, only_songs=False, language=language)
+def download_artwork(album_id, artwork_size):
+    data = fetch_album_songs(album_id, only_songs=False)
     album_data = data[0]
     size_repr = artwork_size + 'x' + artwork_size
     artwork_url = album_data['artworkUrl100'].replace('100x100', size_repr)
@@ -436,7 +438,7 @@ def main():
     parser.add_argument('-p', '--pipeline', action='store_true',
                         help='Read songs from pipe line')
 
-    parser.add_argument('-c', '--clear-others', action='store_true',
+    parser.add_argument('-C', '--clear-others', action='store_true',
                         help='Clear other tags')
 
     parser.add_argument('-a', '--download-artwork', action='store_true',
@@ -447,6 +449,9 @@ def main():
 
     parser.add_argument('-l', '--language', type=str, metavar='LANGUAGE', default=DEFAULT_LANGUAGE,
                         help='The language you want to use for song name, available values: en_us, ja_jp')
+
+    parser.add_argument('-c', '--country', type=str, metavar='COUNTRY', default=DEFAULT_COUNTRY,
+                        help='Country code (https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)')
 
     args = parser.parse_args()
 
@@ -473,9 +478,13 @@ def main():
     if args.language:
         if args.language not in AVAILABLE_LANGUAGES:
             raise ValueError('language could only be one of %s' % AVAILABLE_LANGUAGES)
+        GLOBAL_CONTEXT['language'] = args.language
+
+    if args.country:
+        GLOBAL_CONTEXT['country'] = args.country
 
     if args.download_artwork:
-        download_artwork(album_id, args.artwork_size, language=args.language)
+        download_artwork(album_id, args.artwork_size)
         return
 
     if args.pipeline:
@@ -497,7 +506,7 @@ def main():
     songs = filter(None, songs)
     logger.debug('input songs:%s', songs)
 
-    tag_songs(songs, album_id, clear_others=args.clear_others, language=args.language)
+    tag_songs(songs, album_id, clear_others=args.clear_others)
 
 
 if __name__ == '__main__':
