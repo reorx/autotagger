@@ -223,6 +223,7 @@ def fetch_album_songs(album_id, only_songs=True, context=GLOBAL_CONTEXT):
     results = data['results']
     if not len(results):
         raise ResultIsEmpty('Response is: {}'.format(resp.content.strip()))
+    print(results)
     if only_songs:
         return results[1:]
     else:
@@ -401,7 +402,7 @@ def download_artwork(album_id, artwork_size):
     album_name = album_data[ALBUM_NAME_KEY]
     album_name = album_name.strip().replace(' ', '')
 
-    filename = '{}-{}.jpg'.format(album_name, size_repr)
+    filename = '{}-{}.jpg'.format(album_name.encode('utf8'), size_repr)
 
     resp = requests.get(artwork_url, stream=True)
     if resp.status_code < 300:
