@@ -378,13 +378,13 @@ def get_and_check_ext(filename):
     return ext
 
 
-ID_REGEX = re.compile(r'id(\d+)\/?$')
+ID_REGEX = re.compile(r'\/(id)?(\d+)\/?$')
 
 
 def get_id_from_url(url):
     rv = ID_REGEX.search(url)
     if rv:
-        return rv.groups()[0]
+        return rv.groups()[1]
     return None
 
 
